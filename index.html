@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8 />
+  <title></title>
+  <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700' rel='stylesheet'>
+  <script src='https://api.tiles.mapbox.com/mapbox.js/v2.3.0/mapbox.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox.js/v2.3.0/mapbox.css' rel='stylesheet' />
+  <link href='style.css' rel='stylesheet' />
+</head>
+<body>
+<div class='sidebar'>
+  <div class='heading'>
+    <h1>Roads</h1>
+  </div>
+  <div id='listings' class='listings'></div>
+</div>
+<div id='map' class='map'> </div>
+<script>
+  L.mapbox.accessToken = 'pk.eyJ1IjoianNsZW1tZXIiLCJhIjoiY2lreGdmaWIyMDB4NnU5a3NlaG0xcG0zOSJ9.yiVyfiwAd9r4bimUXGw9YA';
+    
+  var map = L.mapbox.map('map', 'mapbox.streets', {tileLayer: {format: 'jpg70'}})
+        .setView([30.89399, 104.03659], 7);
+
+  // Use styleLayer to add a Mapbox style created in Mapbox Studio
+  //L.mapbox.styleLayer('mapbox://styles/mapbox/emerald-v8').addTo(map);
+  L.mapbox.styleLayer('mapbox://styles/jslemmer/cikxmp8sf00i0b0lx4ei4d41y').addTo(map);   		
+
+  var listings = document.getElementById('listings');
+  var roads = L.mapbox.featureLayer().addTo(map);
+  roads.loadURL('roads.json');
+  
+  var locations = L.mapbox.featureLayer().addTo(map);
+  //locations.loadURL('locations.json');  
+
+  function setActive(el) {
+    var siblings = listings.getElementsByTagName('div');
+    for (var i = 0; i < siblings.length; i++) {
+      siblings[i].className = siblings[i].className
+        .replace(/active/, '').replace(/\s\s*$/, '');
+    }
+
+    el.className += ' active';
+  }
+
+  roads.on('ready', function() {
+    roads.eachLayer(function(locale) {
+
+      // Shorten locale.feature.properties to just `prop` so we're not
+      // writing this long form over and over again.
+      var prop = locale.feature.properties;
+
+      // Define each marker on the map, with roadname and description.
+      var popup = '<h3>' + prop.road + '</h3><div>' + prop.description;
+
+      var listing = listings.appendChild(document.createElement('div'));
+          listing.className = 'item';
+
+      var link = listing.appendChild(document.createElement('a'));
+          link.href = '#';
+          link.className = 'title';
+
+      // Set listing link to Roadname (From - To).
+      link.innerHTML = prop.road + ' (' + prop.from + '-' + prop.to + ')';
+
+      // When a menu item is clicked, animate the map to center
+      // its associated locale and open its popup.
+      link.onclick = function() {
+        setActive(listing);      
+        //map.setView(locale.getLatLng(), 16);
+		
+		// Get bounds of Polyline and set map to fit to those bounds
+		bounds = locale.getBounds();
+		map.fitBounds(bounds);
+
+		// Open Popup for that selected polyline.
+        locale.openPopup();
+        return false;
+      };
+
+      // Marker interaction
+      locale.on('click', function(e) {
+          // 1. center the map on the selected marker.
+          //map.panTo(locale.getLatLng());
+  	      bounds = locale.getBounds();
+  		  map.fitBounds(bounds);
+
+          // 2. Set active the markers associated listing.
+          setActive(listing);
+      });
+
+      popup += '</div>';
+      locale.bindPopup(popup);
+    });
+  });
+
+  locations.on('layeradd', function(e) {
+    var marker = e.layer;
+    marker.setIcon(L.icon({
+      iconUrl: 'marker.png',
+      iconSize: [56, 56],
+      iconAnchor: [28, 28],
+      popupAnchor: [0, -34]
+    }));
+  });
+</script>
+</body>
+</html>
