@@ -1,5 +1,4 @@
-# roadmap-china
-Road quality map of China
+# Road quality map of China
 
 A visual representation of road qualities on G, S or smaller roads, as a support tool for monitoring and planning trips through out china. The data is collected and represented from a motorcycle perspective. Cars should use the highway, so we bikers can ride safer and have more fun!     
 
